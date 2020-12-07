@@ -20,9 +20,9 @@ Each player is represented by an ID from 1 to 22.
 The pitch is 105 meters long (x-axis) and 68 meters wide (y-axis), and coordinates are given in cm. The coordinates of the center of the pitch are (0,0).
 
 ## Data description
-    * `input_train_set.csv` - the input data of the training set
-    * `output_train_set.csv` - the output data of the training set
-    * `input_test_set.csv` - the input data of the test set
+- `input_train_set.csv` - the input data of the training set
+- `output_train_set.csv` - the output data of the training set
+- `input_test_set.csv` - the input data of the test set
 
 ## Data fields
 `input_train_set.csv`:
