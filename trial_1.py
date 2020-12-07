@@ -278,10 +278,3 @@ if __name__ == '__main__':
     print('Submission file "{}" successfully written'.format(fname))
 
     # -------------------------- Random Prediction -------------------------- #
-
-    '''random_state = 0
-    random_state = check_random_state(random_state)
-    predictions = random_state.choice(np.arange(1,23), size=X_TS.shape[0], replace=True)
-
-    fname = write_submission(predictions=predictions, estimated_score=predicted_score, file_name="trial_1_predictions")
-    print('Submission file "{}" successfully written'.format(fname))'''
