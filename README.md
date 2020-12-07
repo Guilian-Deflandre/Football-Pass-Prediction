@@ -27,31 +27,31 @@ The pitch is 105 meters long (x-axis) and 68 meters wide (y-axis), and coordinat
 ## Data fields
 `input_train_set.csv`:
 
-    * `Id` - pass Id;
-    * `time_start` - number of milliseconds since the beginning of the concerned half-time period;
-    * `sender` - the ID of the player who has the ball - `{1..22}`;
-    * `x_<ID>` - the x position of the player `<ID>` - `[-5250 (cm); +5250 (cm)]`;
-    * `y_<ID>` - the y position of the player `<ID>` - `[-3400 (cm); +3400 (cm)]`;
+* `Id` - pass Id;
+* `time_start` - number of milliseconds since the beginning of the concerned half-time period;
+* `sender` - the ID of the player who has the ball - `{1..22}`;
+* `x_<ID>` - the x position of the player `<ID>` - `[-5250 (cm); +5250 (cm)]`;
+* `y_<ID>` - the y position of the player `<ID>` - `[-3400 (cm); +3400 (cm)]`;
 
 `output_train_set.csv`:
 
-    * `receiver` - the `ID` of the player who receive the ball via a pass [data to predict] - `{1..22}`
+* `receiver` - the `ID` of the player who receive the ball via a pass [data to predict] - `{1..22}`
 
 `input_test_set.csv` : see `input_train_set.csv`.
 
 ## Other files provided
 `toy_example.py` : a "naive" script that helps you start and mainly consists in:
 
-    * Loading the training set (both input and output files);
-    * Deriving features for each pair of (sender, potential receiver) (This step is only one way of addressing the problem. We strongly recommend to also consider other approaches that the one provided here);
-    * Making random/naive predictions (see below for more details);
-    * Creating a submission file following the guidelines provided in the evaluation section.
+* Loading the training set (both input and output files);
+* Deriving features for each pair of (sender, potential receiver) (This step is only one way of addressing the problem. We strongly recommend to also consider other approaches that the one provided here);
+* Making random/naive predictions (see below for more details);
+* Creating a submission file following the guidelines provided in the evaluation section.
 
 In particular, please note that:
-    * It creates a new sample set where each sample is a pair of players: the sender and player `j` with `j=1,..,22` (including the sender).
-    * It computes two features: the distance between the two players and if they belong to the same team.
-    * The `write_submission` function can make a submission with only the predicted player `ID` (`predictions` of size `(n_test_samples, )`) and/or predicted probabilities (`probas` of size `(n_test_samples,22)`). If only the predictions are provided, then the probabilities are derived (i.e., `1.0` for the predicted player in predictions and `0.0` for all others). If only the probabilities are given, then the predictions are derived (i.e., the predicted player is the one with the largest probability). Note that if several players have the same probability, the one with the smaller Id is selected.
-    * `predicted_score` is hard-coded. Do not forget to modify this value.
+* It creates a new sample set where each sample is a pair of players: the sender and player `j` with `j=1,..,22` (including the sender).
+* It computes two features: the distance between the two players and if they belong to the same team.
+* The `write_submission` function can make a submission with only the predicted player `ID` (`predictions` of size `(n_test_samples, )`) and/or predicted probabilities (`probas` of size `(n_test_samples,22)`). If only the predictions are provided, then the probabilities are derived (i.e., `1.0` for the predicted player in predictions and `0.0` for all others). If only the probabilities are given, then the predictions are derived (i.e., the predicted player is the one with the largest probability). Note that if several players have the same probability, the one with the smaller Id is selected.
+* `predicted_score` is hard-coded. Do not forget to modify this value.
 The `toy_example` script generates two submission files: one based on (randomly) predicted player ids, and one based on player probabilities predicted by a decision tree.
 
 # Organization
