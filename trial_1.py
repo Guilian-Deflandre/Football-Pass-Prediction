@@ -234,7 +234,7 @@ def write_submission(predictions=None, probas=None, estimated_score=0, file_name
     return file_name
 
 if __name__ == '__main__':
-    prefix = ''
+    prefix = 'Data/'
 
     # ------------------------------- Learning ------------------------------- #
     # Load training data
