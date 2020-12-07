@@ -165,7 +165,7 @@ def write_submission(predictions=None, probas=None, estimated_score=0, file_name
     return file_name
 
 if __name__ == '__main__':
-    prefix = ''
+    prefix = 'Data/'
 
     # ------------------------------- Learning ------------------------------- #
     # Load training data
@@ -209,7 +209,7 @@ if __name__ == '__main__':
     predicted_score = 0.01 # it is quite logical...
 
     # Making the submission file
-    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name="toy_example_probas")
+    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name=prefix+"toy_example_probas")
     print('Submission file "{}" successfully written'.format(fname))
 
     # -------------------------- Random Prediction -------------------------- #
@@ -218,5 +218,5 @@ if __name__ == '__main__':
     random_state = check_random_state(random_state)
     predictions = random_state.choice(np.arange(1,23), size=X_TS.shape[0], replace=True)
 
-    fname = write_submission(predictions=predictions, estimated_score=predicted_score, file_name="toy_example_predictions")
+    fname = write_submission(predictions=predictions, estimated_score=predicted_score, file_name=prefix+"toy_example_predictions")
     print('Submission file "{}" successfully written'.format(fname))
