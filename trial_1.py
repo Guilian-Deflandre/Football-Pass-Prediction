@@ -62,13 +62,7 @@ def build_distance_matrix(pass_):
     param : pass vector
     return : 22x22 matrix of elements e_ij = distance(player_i, player_j)
     '''
-    #sender = pass_.sender
-    #time = pass_.time_start
-    #id = pass_.Id
-    #print(pass_.drop(["sender", "time_start", "Id"]))
-    #positions = np.delete(pass_, [sender-1, time-1, id-1])                      #vector of all positions of pass_
     positions = pass_.drop(["sender", "time_start", "Id"])
-
     pos_size = np.size(positions)
     s = (int(pos_size/2), int(pos_size/2))
     distance_matrix = np.zeros(s)
@@ -97,7 +91,7 @@ def distance_to_opp(sender, player, dist_mat):
 
     return distance
 
-def heron(sender, player, distance, dist_mat, id):
+def heron(sender, player, distance, dist_mat):
     '''
     param : sender id; player id; disatnce between sender and player; distance matrix
     return : smallest distance between the pass line and an opponent of the sender, using Heron's formula
@@ -143,15 +137,20 @@ def make_pair_of_players(X_, y_=None):
     # From pass to pair of players
     idx = 0
     for i in range(n_):
+        print("iteration nb {}".format(i))
         p_i_ = X_.iloc[i]
         distance_matrix = build_distance_matrix(p_i_)                           #build 22x22 distance matrix
         sender = X_.iloc[i].sender
         players = np.arange(1, 23)
         other_players = np.delete(players, sender-1)
+        X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
+                             sender, p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
+                             same_team_(sender, sender), 0, 0, 0, 0]
+        idx += 1
         for player_j in other_players:
             distance = distance_matrix[sender-1, player_j-1]
             distance_opp = distance_to_opp(sender, player_j, distance_matrix)
-            distance_line = heron(sender, player_j, distance, distance_matrix, X_.iloc[i].Id)
+            distance_line = heron(sender, player_j, distance, distance_matrix)
             X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
                                  player_j, p_i_["x_{:0.0f}".format(player_j)], p_i_["y_{:0.0f}".format(player_j)],
                                  same_team_(sender, player_j), distance, distance_opp[0], distance_opp[1], distance_line]
@@ -254,7 +253,7 @@ if __name__ == '__main__':
     X_LS = load_from_csv(prefix+'input_training_set.csv')
     y_LS = load_from_csv(prefix+'output_training_set.csv')
 
-    'Pre-process the data to remove what has to be removed'
+    'Pre-process the data to remove what has to be removed?'
 
     X_LS_pairs, y_LS_pairs = make_pair_of_players(X_LS, y_LS)
 
@@ -267,6 +266,9 @@ if __name__ == '__main__':
         print('Training...')
         model.fit(X_features, y_LS_pairs)
 
+    # --------------------------- Cross validation --------------------------- #
+        
+
     # ------------------------------ Prediction ------------------------------ #
     # Load test data
     X_TS = load_from_csv(prefix+'input_test_set.csv')
@@ -276,7 +278,7 @@ if __name__ == '__main__':
     X_TS_pairs, _ = make_pair_of_players(X_TS)
 
     X_TS_features = X_TS_pairs[["distance", "distance_opp_1", "distance_opp_2", "distance_line", "same_team"]]
-
+    print(X_TS_features)
     # Predict
     y_pred = model.predict_proba(X_TS_features)[:,1]
 
@@ -287,7 +289,7 @@ if __name__ == '__main__':
     predicted_score = 0.01 # it is quite logical...
 
     # Making the submission file
-    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name="trial_1_probas")
+    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name="trial_1_ligne_de_passe_probas")
     print('Submission file "{}" successfully written'.format(fname))
 
     # -------------------------- Random Prediction -------------------------- #
