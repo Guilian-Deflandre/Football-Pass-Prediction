@@ -1,7 +1,7 @@
 # ! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os                                                  # idées : distance par rapport à x joueurs adverses; distance du joeur à la ligne de touche/fond; méthode d'ensemble   
+import os                                                  # idées : distance par rapport à x joueurs adverses; distance du joeur à la ligne de touche/fond; méthode d'ensemble
 import time
 import datetime
 from contextlib import contextmanager
@@ -165,7 +165,7 @@ def write_submission(predictions=None, probas=None, estimated_score=0, file_name
     return file_name
 
 if __name__ == '__main__':
-    prefix = 'Data/'
+    prefix = 'Data/Toy'
 
     # ------------------------------- Learning ------------------------------- #
     # Load training data
