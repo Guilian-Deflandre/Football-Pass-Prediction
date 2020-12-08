@@ -21,7 +21,6 @@ def measure_time(label):
     >>> with measure_time('Heavy computation'):
     >>>     do_heavy_computation()
     'Duration of [Heavy computation]: 0:04:07.765971'
-
     Parameters
     ----------
     label: str
@@ -36,14 +35,12 @@ def measure_time(label):
 def load_from_csv(path, delimiter=','):
     """
     Load csv file and return a NumPy array of its data
-
     Parameters
     ----------
     path: str
         The path to the csv file to load
     delimiter: str (default: ',')
         The csv field delimiter
-
     Return
     ------
     D: array
@@ -170,7 +167,6 @@ def compute_distance_(X_):
 def write_submission(predictions=None, probas=None, estimated_score=0, file_name="submission", date=True, indexes=None):
     """
     Write a submission file for the Kaggle platform
-
     Parameters
     ----------
     predictions: array [n_predictions, 1]
@@ -187,7 +183,6 @@ def write_submission(predictions=None, probas=None, estimated_score=0, file_name
         (.txt) will be appended to the file.
     date: boolean (default: True)
         Whether to append the date in the file name
-
     Return
     ------
     file_name: path
@@ -297,6 +292,5 @@ if __name__ == '__main__':
     '''random_state = 0
     random_state = check_random_state(random_state)
     predictions = random_state.choice(np.arange(1,23), size=X_TS.shape[0], replace=True)
-
     fname = write_submission(predictions=predictions, estimated_score=predicted_score, file_name="trial_1_predictions")
     print('Submission file "{}" successfully written'.format(fname))'''
