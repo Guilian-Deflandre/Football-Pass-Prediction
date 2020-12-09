@@ -21,6 +21,7 @@ def measure_time(label):
     >>> with measure_time('Heavy computation'):
     >>>     do_heavy_computation()
     'Duration of [Heavy computation]: 0:04:07.765971'
+
     Parameters
     ----------
     label: str
@@ -35,12 +36,14 @@ def measure_time(label):
 def load_from_csv(path, delimiter=','):
     """
     Load csv file and return a NumPy array of its data
+
     Parameters
     ----------
     path: str
         The path to the csv file to load
     delimiter: str (default: ',')
         The csv field delimiter
+
     Return
     ------
     D: array
@@ -59,7 +62,13 @@ def build_distance_matrix(pass_):
     param : pass vector
     return : 22x22 matrix of elements e_ij = distance(player_i, player_j)
     '''
+    #sender = pass_.sender
+    #time = pass_.time_start
+    #id = pass_.Id
+    #print(pass_.drop(["sender", "time_start", "Id"]))
+    #positions = np.delete(pass_, [sender-1, time-1, id-1])                      #vector of all positions of pass_
     positions = pass_.drop(["sender", "time_start", "Id"])
+
     pos_size = np.size(positions)
     s = (int(pos_size/2), int(pos_size/2))
     distance_matrix = np.zeros(s)
@@ -104,20 +113,7 @@ def heron(sender, player, distance, dist_mat):
         opp_dist_s = dist_mat[row_s, start : start+11] #distances between sender and opponents
 
         s = 0.5*(distance + opp_dist_p + opp_dist_s)
-
-        tol = 10e-9
-        sd = s-distance
-        ss = s-opp_dist_s
-        sp = s-opp_dist_p
-        (sd)[abs(sd) < tol] = 0.0
-        (ss)[abs(ss) < tol] = 0.0
-        (sp)[abs(sp) < tol] = 0.0
-
-        if distance == 0 or math.isnan(distance):                               #if player and sender @ the same place
-            h = min(opp_dist_s)
-            return h
-
-        area = np.sqrt(s*(sd)*(ss)*(sp))
+        area = np.sqrt(s*(s-distance)*(s-opp_dist_s)*(s-opp_dist_p))
         h =2*area/distance
         h = min(h)
 
@@ -138,12 +134,8 @@ def make_pair_of_players(X_, y_=None):
         distance_matrix = build_distance_matrix(p_i_)                           #build 22x22 distance matrix
         sender = X_.iloc[i].sender
         players = np.arange(1, 23)
-        other_players = np.delete(players, sender-1)
-        X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
-                             sender, p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
-                             same_team_(sender, sender), 0, 0, 0, 0]
-        idx += 1
-        for player_j in other_players:
+        #other_players = np.delete(players, sender-1)
+        for player_j in players:
             distance = distance_matrix[sender-1, player_j-1]
             distance_opp = distance_to_opp(sender, player_j, distance_matrix)
             distance_line = heron(sender, player_j, distance, distance_matrix)
@@ -166,6 +158,7 @@ def compute_distance_(X_):
 def write_submission(predictions=None, probas=None, estimated_score=0, file_name="submission", date=True, indexes=None):
     """
     Write a submission file for the Kaggle platform
+
     Parameters
     ----------
     predictions: array [n_predictions, 1]
@@ -182,6 +175,7 @@ def write_submission(predictions=None, probas=None, estimated_score=0, file_name
         (.txt) will be appended to the file.
     date: boolean (default: True)
         Whether to append the date in the file name
+
     Return
     ------
     file_name: path
@@ -247,7 +241,7 @@ if __name__ == '__main__':
     X_LS = load_from_csv(prefix+'input_training_set.csv')
     y_LS = load_from_csv(prefix+'output_training_set.csv')
 
-    'Pre-process the data to remove what has to be removed?'
+    'Pre-process the data to remove what has to be removed'
 
     X_LS_pairs, y_LS_pairs = make_pair_of_players(X_LS, y_LS)
 
@@ -260,9 +254,6 @@ if __name__ == '__main__':
         print('Training...')
         model.fit(X_features, y_LS_pairs)
 
-    # --------------------------- Cross validation --------------------------- #
-
-
     # ------------------------------ Prediction ------------------------------ #
     # Load test data
     X_TS = load_from_csv(prefix+'input_test_set.csv')
@@ -272,7 +263,7 @@ if __name__ == '__main__':
     X_TS_pairs, _ = make_pair_of_players(X_TS)
 
     X_TS_features = X_TS_pairs[["distance", "distance_opp_1", "distance_opp_2", "distance_line", "same_team"]]
-    print(X_TS_features)
+
     # Predict
     y_pred = model.predict_proba(X_TS_features)[:,1]
 
@@ -283,13 +274,7 @@ if __name__ == '__main__':
     predicted_score = 0.01 # it is quite logical...
 
     # Making the submission file
-    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name=prefix+"trial_1_ligne_de_passe_probas")
+    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name="trial_1_probas")
     print('Submission file "{}" successfully written'.format(fname))
 
     # -------------------------- Random Prediction -------------------------- #
-
-    '''random_state = 0
-    random_state = check_random_state(random_state)
-    predictions = random_state.choice(np.arange(1,23), size=X_TS.shape[0], replace=True)
-    fname = write_submission(predictions=predictions, estimated_score=predicted_score, file_name="trial_1_predictions")
-    print('Submission file "{}" successfully written'.format(fname))'''
