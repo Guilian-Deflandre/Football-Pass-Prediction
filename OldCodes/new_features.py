@@ -9,8 +9,9 @@ from contextlib import contextmanager
 import pandas as pd
 import numpy as np
 from scipy import sparse
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import check_random_state
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
 
 import math
 
@@ -91,6 +92,31 @@ def distance_to_opp(sender, player, dist_mat):
 
     return distance
 
+""" ----------- AJOUT NUMBER_OF_OPP ------------------------------------------------------------------------------------------------------------------------------- """
+
+def number_of_opp(sender, player, dist_mat):
+    '''
+    param : sender id; player id; distance matrix
+    return : number of opponents in a radius of 15 meters around the potential
+    receiver
+    '''
+    numb_opp = 0
+    radius = 1580 #Mean length of a pass
+
+    row = player-1
+    team = int(sender/22<=0.5)
+    start = team*11
+    opp_dist = dist_mat[row, start : start+11]
+
+    for i in range(0, opp_dist.shape[0]):
+
+        if opp_dist[i] <= radius:
+            numb_opp = numb_opp + 1
+
+    return numb_opp
+
+""" --------- FIN AJOUT ------------------------------------------------------------------------------------------------------------------------------------------- """
+
 def heron(sender, player, distance, dist_mat):
     '''
     param : sender id; player id; disatnce between sender and player; distance matrix
@@ -126,10 +152,26 @@ def heron(sender, player, distance, dist_mat):
 
     return h
 
+def define_zone(x, y):
+    zone = 0
+    if y >= -1750 and y <=1750:
+        if x >= -3200 and x <= 3200:
+            zone = 1 #central zone
+        if x >= -5250 and x < -3200:
+            zone = 2 #zone but 1
+        else:
+            zone = 3 #zone but 2
+    else:
+        if y >1750:
+            zone = 4 #couloir haut
+        else:
+            zone = 5 #couloir bas
+    return zone
+
 def make_pair_of_players(X_, y_=None):
     n_ = X_.shape[0]
     pair_feature_col = ["sender", "x_sender", "y_sender", "player_j", "x_j", "y_j", "same_team", "distance",
-                        "distance_opp_1", "distance_opp_2", "distance_line"]
+                        "distance_opp_1", "distance_opp_2", "distance_line","nb_opp", "zone_send", "zone_rec","x_ball_gain"]
 
     X_pairs = pd.DataFrame(data=np.zeros((n_*22,len(pair_feature_col))), columns=pair_feature_col)
     y_pairs = pd.DataFrame(data=np.zeros((n_*22, 1)), columns=["pass"])
@@ -137,29 +179,55 @@ def make_pair_of_players(X_, y_=None):
     # From pass to pair of players
     idx = 0
     for i in range(n_):
-        print("iteration nb {}".format(i))
         p_i_ = X_.iloc[i]
         distance_matrix = build_distance_matrix(p_i_)                           #build 22x22 distance matrix
+        x_ball_gain = compute_x_ball_gain(p_i_)
         sender = X_.iloc[i].sender
         players = np.arange(1, 23)
         other_players = np.delete(players, sender-1)
+        ss_numb_opp = number_of_opp(sender, sender, distance_matrix)
         X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
                              sender, p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
-                             same_team_(sender, sender), 0, 0, 0, 0]
+                             same_team_(sender, sender), 0, 0, 0, 0, ss_numb_opp, 0, 0, 0]
+        zone_sender = define_zone(p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)])
+
         idx += 1
         for player_j in other_players:
             distance = distance_matrix[sender-1, player_j-1]
             distance_opp = distance_to_opp(sender, player_j, distance_matrix)
             distance_line = heron(sender, player_j, distance, distance_matrix)
+            numb_opp = number_of_opp(sender, player_j, distance_matrix)
             X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)], p_i_["y_{:0.0f}".format(sender)],
                                  player_j, p_i_["x_{:0.0f}".format(player_j)], p_i_["y_{:0.0f}".format(player_j)],
-                                 same_team_(sender, player_j), distance, distance_opp[0], distance_opp[1], distance_line]
+                                 same_team_(sender, player_j), distance, distance_opp[0], distance_opp[1], distance_line,
+                                 numb_opp, zone_sender, define_zone(p_i_["x_{:0.0f}".format(player_j)], p_i_["y_{:0.0f}".format(player_j)]),x_ball_gain["x_{:0.0f}".format(player_j)]]
 
             if not y_ is None:
                 y_pairs.iloc[idx]["pass"] = int(player_j == y_.iloc[i])
             idx += 1
 
     return X_pairs, y_pairs
+
+def compute_x_ball_gain(pass_):
+    sender = pass_["sender"]
+    x_positions = pass_.drop(["sender","time_start", "Id"])
+    for i in range(1, 23):
+        x_positions = x_positions.drop("y_{:0.0f}".format(i))
+
+    leftmost_player = find_team_left_side(x_positions)
+    x_gains = {}
+
+    for i in range(len(x_positions)):
+        x_gains["x_{:0.0f}".format(i+1)] = (x_positions["x_{:0.0f}".format(i+1)] - x_positions["x_{:0.0f}".format(sender)])
+
+        if(same_team_(sender, leftmost_player) == 0):
+            x_gains["x_{:0.0f}".format(i+1)] = -x_gains["x_{:0.0f}".format(i+1)]
+
+    return x_gains
+
+def find_team_left_side(x_positions):
+    leftmost_key = x_positions.keys()[np.argmin(x_positions)]
+    return int(leftmost_key.replace('x_',''))
 
 def compute_distance_(X_):
     d = np.zeros((X_.shape[0],))
@@ -246,30 +314,55 @@ def write_submission(predictions=None, probas=None, estimated_score=0, file_name
     return file_name
 
 if __name__ == '__main__':
-    prefix = 'Data\'
+    prefix = 'Data/'
 
-    # ------------------------------- Learning ------------------------------- #
+    # ------------------------------- Features derivation ------------------------------- #
     # Load training data
     X_LS = load_from_csv(prefix+'input_training_set.csv')
     y_LS = load_from_csv(prefix+'output_training_set.csv')
 
     'Pre-process the data to remove what has to be removed?'
-
+    print('Features derivation...')
     X_LS_pairs, y_LS_pairs = make_pair_of_players(X_LS, y_LS)
 
-    X_features = X_LS_pairs[["distance", "distance_opp_1", "distance_opp_2", "distance_line","same_team"]]
+    X_features = X_LS_pairs[["distance", "distance_opp_1", "distance_opp_2", "distance_line","same_team","nb_opp", "zone_send", "zone_rec","x_ball_gain"]]
 
-    # Build the model
-    model = DecisionTreeClassifier()
+    # -------------------------- Test set method ----------------------------- #
+    print('Test set method...')
+    # Split data into 3 parts (60-20-20) [%]
+    X_LS_VS, X_test, y_LS_VS, y_test = train_test_split(X_features, y_LS_pairs, test_size=0.2, random_state=1)
+    X_train, X_val, y_train, y_val = train_test_split(X_LS_VS, y_LS_VS, test_size=0.25, random_state=1)
+    print("| SHAPES |\nX_train : {}\nX_valid : {}\nX_test : {}".format(X_train.shape, X_val.shape, X_test.shape))
 
-    with measure_time('Training'):
-        print('Training...')
-        model.fit(X_features, y_LS_pairs)
+    # Build models, train them on LS, and evaluate them on VS
+    k = np.array([60, 65, 75, 80, 85, 90])
+    scores = []
+    for i in range(k.size):
+        print('\nTraining for k = {}...'.format(k[i]))
+        model = KNeighborsClassifier(n_neighbors=k[i]).fit(X_train,np.ravel(y_train))
+        scores.append(model.score(X_val, y_val))
 
-    # --------------------------- Cross validation --------------------------- #
+    # Select the best model based on its performance on the VS
+    scores = np.asarray(scores)
+    print('Scores: {}'.format(scores))
+    best = np.argmax(scores)
+    best_model = KNeighborsClassifier(n_neighbors=k[best])
+    print('\nBest model: k = {}'.format(k[best]))
 
+    # Retrain this model on LS+VS
+    print('\nTraining on LS+VS...')
+    best_model = best_model.fit(X_LS_VS, np.ravel(y_LS_VS))
+
+    # Test this model on the TS
+    perf_estim = best_model.score(X_test, y_test)
+    print('\nPerformance estimate: {}'.format(perf_estim))
+
+    # Retrain this model on LS+VS+TS
+    print('\nTraining on LS+VS+TS...')
+    final_model = KNeighborsClassifier(n_neighbors=k[best]).fit(X_features, np.ravel(y_LS_pairs))
 
     # ------------------------------ Prediction ------------------------------ #
+    print('\nPredicting...')
     # Load test data
     X_TS = load_from_csv(prefix+'input_test_set.csv')
     print(X_TS.shape)
@@ -277,20 +370,20 @@ if __name__ == '__main__':
     # Same transformation as LS
     X_TS_pairs, _ = make_pair_of_players(X_TS)
 
-    X_TS_features = X_TS_pairs[["distance", "distance_opp_1", "distance_opp_2", "distance_line", "same_team"]]
+    X_TS_features = X_TS_pairs[["distance", "distance_opp_1", "distance_opp_2", "distance_line", "same_team","nb_opp", "zone_send", "zone_rec","x_ball_gain"]]
     print(X_TS_features)
     # Predict
-    y_pred = model.predict_proba(X_TS_features)[:,1]
+    y_pred = final_model.predict_proba(X_TS_features)[:,1]
 
     # Deriving probas
     probas = y_pred.reshape(X_TS.shape[0], 22)
 
     # Estimated score of the model
-    predicted_score = 0.01 # it is quite logical...
+    predicted_score = perf_estim
 
     # Making the submission file
-    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name=prefix+"trial_1_ligne_de_passe_probas")
-    print('Submission file "{}" successfully written'.format(fname))
+    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name=prefix+"FINALknn_test_set_method")
+    print('\nSubmission file "{}" successfully written'.format(fname))
 
     # -------------------------- Random Prediction -------------------------- #
 
