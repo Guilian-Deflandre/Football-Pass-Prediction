@@ -11,6 +11,8 @@ import numpy as np
 from scipy import sparse
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils import check_random_state
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import cross_val_score
 
 import math
 
@@ -260,11 +262,15 @@ if __name__ == '__main__':
     X_features = X_LS_pairs[["distance", "distance_opp_1", "distance_opp_2", "distance_line","same_team"]]
 
     # Build the model
-    model = DecisionTreeClassifier()
+    k = 100
+    model = KNeighborsClassifier(n_neighbors=k)
+
+    #scores = cross_val_score(model, X_features, np.ravel(y_LS_pairs), cv = 5)
+    #print('k nearest neighbors for k = {} ----- Mean score: {}'.format(k, scores.mean()))
 
     with measure_time('Training'):
         print('Training...')
-        model.fit(X_features, y_LS_pairs)
+        model.fit(X_features, np.ravel(y_LS_pairs))
 
     # --------------------------- Cross validation --------------------------- #
 
@@ -289,7 +295,7 @@ if __name__ == '__main__':
     predicted_score = 0.01 # it is quite logical...
 
     # Making the submission file
-    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name="trial_1_ligne_de_passe_probas")
+    fname = write_submission(probas=probas, estimated_score=predicted_score, file_name="KNN_100_trial_1_ligne_de_passe_probas")
     print('Submission file "{}" successfully written'.format(fname))
 
     # -------------------------- Random Prediction -------------------------- #
