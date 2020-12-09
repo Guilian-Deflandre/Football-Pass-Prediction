@@ -134,7 +134,6 @@ def make_pair_of_players(X_, y_=None):
     # From pass to pair of players
     idx = 0
     for i in range(n_):
-        print("iteration nb {}".format(i))
         p_i_ = X_.iloc[i]
         distance_matrix = build_distance_matrix(p_i_)                           #build 22x22 distance matrix
         sender = X_.iloc[i].sender
