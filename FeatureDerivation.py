@@ -95,6 +95,25 @@ def distance_to_opp(sender, player, dist_mat):
 
     return distance
 
+def distance_to_opp(sender, player, dist_mat):
+    '''
+    param : sender id; player id; distance matrix
+    return : distances between player and the two closest opponents of the
+    sender
+    '''
+    row = player-1
+    team = int(sender/22 <= 0.5)
+    start = team*11
+    opp_dist = dist_mat[row, start: start+11]
+    if (sameteam(sender, player) == 0):
+        distance = (min(opp_dist), min(np.delete(opp_dist,
+                                             np.argmin(opp_dist))))
+    else:
+        np.delete(opp_dist,np.argmin(opp_dist))
+        distance = (min(opp_dist), min(np.delete(opp_dist,
+                                             np.argmin(opp_dist))))
+    return distance
+
 
 def number_of_opp(sender, player, dist_mat):
     '''
@@ -249,6 +268,9 @@ def compute_x_ball_gain(pass_):
         if(same_team_(sender, leftmost_player) == 0):
             x_gains["x_{:0.0f}".format(i+1)] = -x_gains["x_{:0.0f}"
                                                         .format(i+1)]
+
+        if(same_team_(sender, i+1) == 0) :
+            x_gains["x_{:0.0f}".format(i+1)] = -10000
 
     return x_gains
 

@@ -109,6 +109,57 @@ if __name__ == '__main__':
     final_model = RandomForestClassifier(
         nb_estimators=nb_trees[best], max_depth=14).fit(X_LS_VS_TS_features, np.ravel(y_LS_VS_TS_pairs))
 
+    """
+    'Pre-process the data to remove what has to be removed?'
+    print('Features derivation...')
+    X_LS_pairs, y_LS_pairs = FeatureDerivation.make_pair_of_players(X_LS, y_LS)
+
+    X_features = X_LS_pairs[["distance", "distance_opp_1", "distance_opp_2",
+                             "distance_line", "same_team", "nb_opp",
+                             "zone_send", "zone_rec", "x_ball_gain"]]
+
+    # -------------------------- Test set method ---------------------------- #
+    print('Test set method...')
+    # Split data into 3 parts (60-20-20) [%]
+    X_LS_VS, X_test, y_LS_VS, y_test = train_test_split(X_features,
+                                                        y_LS_pairs,
+                                                        test_size=0.2,
+                                                        random_state=1)
+    X_train, X_val, y_train, y_val = train_test_split(X_LS_VS, y_LS_VS,
+                                                      test_size=0.25,
+                                                      random_state=1)
+    print("| SHAPES |\nX_train : {}\nX_valid : {}\nX_test : {}"
+          .format(X_train.shape, X_val.shape, X_test.shape))
+
+    # Build models, train them on LS, and evaluate them on VS
+    depth = np.array([2, 4, 6, 8, 10])
+    scores = []
+    for i in range(depth.size):
+        print('\nTraining for max_depth = {}...'.format(depth[i]))
+        model = RandomForestClassifier(
+            max_depth=depth[i]).fit(X_train, np.ravel(y_train))
+        scores.append(model.score(X_val, y_val))
+
+    # Select the best model based on its performance on the VS
+    scores = np.asarray(scores)
+    print('Scores: {}'.format(scores))
+    best = np.argmax(scores)
+    best_model = RandomForestClassifier(max_depth=depth[best])
+    print('\nBest model: max depth = {}'.format(depth[best]))
+
+    # Retrain this model on LS+VS
+    print('\nTraining on LS+VS...')
+    best_model = best_model.fit(X_LS_VS, np.ravel(y_LS_VS))
+
+    # Test this model on the TS
+    perf_estim = best_model.score(X_test, y_test)
+    print('\nPerformance estimate: {}'.format(perf_estim))
+
+    # Retrain this model on LS+VS+TS
+    print('\nTraining on LS+VS+TS...')
+    final_model = RandomForestClassifier(
+        max_depth=depth[best]).fit(X_features, np.ravel(y_LS_pairs))
+
     # ------------------------------ Prediction ----------------------------- #
     print('\nPredicting...')
     # Load test data
@@ -135,6 +186,6 @@ if __name__ == '__main__':
     fname = FeatureDerivation.write_submission(probas=probas,
                                                estimated_score=predicted_score,
                                                file_name=prefix +
-                                               "forest_test_set_method")
-
-    print('\nSubmission file "{}" successfully written'.format(fname))
+                                               "FINAL_random_forest" +
+                                               "_test_set_method")
+    print('\nSubmission file "{}" successfully written'.format(fname))"""
