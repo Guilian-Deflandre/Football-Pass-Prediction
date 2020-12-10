@@ -2,19 +2,102 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 import FeatureDerivation
+
+def output_reconstruction(y):
+    """Reconstruct output vector as in original data"""
+    size = len(y)
+    y = np.asarray(y)
+    output = np.zeros((int(size/22),))
+    y = np.reshape(y, (int(size/22), 22))
+    for i in range(int(size/22)):
+        output[i] = np.argmax(y[i])+1
+
+    return output
 
 if __name__ == '__main__':
     prefix = 'Data/'
 
-    # ------------------------- Features derivation ------------------------- #
+    # -------------------------- Data retrievement -------------------------- #
     # Load training data
-    X_LS = FeatureDerivation.load_from_csv(prefix+'input_training_set.csv')
-    y_LS = FeatureDerivation.load_from_csv(prefix+'output_training_set.csv')
+    X_LS_tot = FeatureDerivation.load_from_csv(prefix+'input_training_set.csv')
+    y_LS_tot = FeatureDerivation.load_from_csv(prefix+'output_training_set.csv')
 
+    # --------------------------- Test set method --------------------------- #
+    size = round(0.2*(X_LS_tot.shape[0]))
+    print('size = {}'.format(size))
+    X_LS_VS, X_TS, y_LS_VS, y_TS = train_test_split(X_LS_tot, y_LS_tot, test_size=size, random_state=1)
+    X_LS, X_VS, y_LS, y_VS = train_test_split(X_LS_VS, y_LS_VS, test_size=size, random_state=1)
+    print("| SHAPES |\nX_train : {}\nX_valid : {}\nX_test : {}".format(X_LS.shape[0], X_VS.shape[0], X_TS.shape[0]))
+
+    print('Learning set features derivation...')
+    X_LS_pairs, y_LS_pairs = FeatureDerivation.make_pair_of_players(X_LS, y_LS)
+    X_LS_features = X_LS_pairs[["distance", "distance_opp_1", "distance_opp_2",
+                             "distance_line", "same_team", "nb_opp",
+                             "zone_send", "zone_rec", "x_ball_gain"]]
+
+    # Build models, train them on LS, and evaluate them on VS
+    print('Validation set features derivation...')
+    X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
+    X_VS_features = X_VS_pairs[["distance", "distance_opp_1", "distance_opp_2",
+                             "distance_line", "same_team", "nb_opp",
+                             "zone_send", "zone_rec", "x_ball_gain"]]
+
+    k = np.arange(1, 100)
+    scores = []
+    for i in range(k.size):
+        print('\nTraining for n_neighbors = {}...'.format(k[i]))
+        model = KNeighborsClassifier(
+            n_neighbors=k[i]).fit(X_LS_features, np.ravel(y_LS_pairs))
+        y_hat = model.predict_proba(X_VS_features)[:, 1]
+        y_hat = output_reconstruction(y_hat)
+        scores.append(accuracy_score(y_VS, y_hat))
+
+    # Select the best model based on its performance on the VS
+    scores = np.asarray(scores)
+    print('Scores: {}'.format(scores))
+    best = np.argmax(scores)
+    best_model = KNeighborsClassifier(n_neighbors=k[best])
+    print('\nBest model: n_neighbors = {}'.format(k[best]))
+
+    fig = plt.figure()
+    plt.plot(k, scores)
+    plt.show()
+    fig.savefig('KNN_test_set')
+
+    # Retrain this model on LS+VS
+    X_LS_VS_features = pd.concat([X_LS_features, X_VS_features])
+    print('X_LS_VS is of shape {}'.format(X_LS_VS_features.shape))
+    y_LS_VS_pairs = pd.concat([y_LS_pairs, y_VS_pairs])
+    print('\nTraining on LS+VS...')
+    best_model = best_model.fit(X_LS_VS_features, np.ravel(y_LS_VS_pairs))
+
+    # Test this model on the TS
+    print('Test set features derivation...')
+    X_TS_pairs, y_TS_pairs = FeatureDerivation.make_pair_of_players(X_TS, y_TS)
+    X_TS_features = X_TS_pairs[["distance", "distance_opp_1", "distance_opp_2",
+                             "distance_line", "same_team", "nb_opp",
+                             "zone_send", "zone_rec", "x_ball_gain"]]
+    y_hat = best_model.predict_proba(X_TS_features)[:,1]
+    y_hat = output_reconstruction(y_hat)
+    perf_estim = accuracy_score(y_TS, y_hat)
+    print('\nPerformance estimate: {}'.format(perf_estim))
+
+    # Retrain this model on LS+VS+TS
+    X_LS_VS_TS_features = pd.concat([X_LS_VS_features, X_TS_features])
+    print('X_LS_VS_TS is of shape {}'.format(X_LS_VS_TS_features.shape))
+    y_LS_VS_TS_pairs = pd.concat([y_LS_VS_pairs, y_TS_pairs])
+    print('\nTraining on LS+VS+TS...')
+    final_model = KNeighborsClassifier(
+        n_neighbors=k[best]).fit(X_LS_VS_TS_features, np.ravel(y_LS_VS_TS_pairs))
+
+    """
     'Pre-process the data to remove what has to be removed?'
     print('Features derivation...')
     X_LS_pairs, y_LS_pairs = FeatureDerivation.make_pair_of_players(X_LS, y_LS)
@@ -91,4 +174,4 @@ if __name__ == '__main__':
                                                estimated_score=predicted_score,
                                                file_name=prefix +
                                                "FINALknn_test_set_method")
-    print('\nSubmission file "{}" successfully written'.format(fname))
+    print('\nSubmission file "{}" successfully written'.format(fname))"""

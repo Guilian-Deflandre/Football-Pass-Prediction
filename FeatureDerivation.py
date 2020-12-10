@@ -254,7 +254,7 @@ def compute_x_ball_gain(pass_):
 
 
 def find_team_left_side(x_positions):
-    leftmost_key = x_positions.keys()[np.argmin(x_positions)]
+    leftmost_key = x_positions.keys()[np.argmin(x_positions.idxmin())]
     return int(leftmost_key.replace('x_', ''))
 
 
