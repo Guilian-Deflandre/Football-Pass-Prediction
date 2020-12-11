@@ -48,13 +48,11 @@ def load_from_csv(path, delimiter=','):
     """
     return pd.read_csv(path, delimiter=delimiter)
 
-
 def same_team_(sender, player_j):
     if sender <= 11:
         return int(player_j <= 11)
     else:
         return int(player_j > 11)
-
 
 def build_distance_matrix(pass_):
     '''
@@ -76,25 +74,6 @@ def build_distance_matrix(pass_):
 
     return distance_matrix
 
-
-def distance_to_opp(sender, player, dist_mat):
-    '''
-    param : sender id; player id; distance matrix
-    return : distances between player and the two closest opponents of the
-    sender
-    '''
-    if(same_team_(sender, player) == 0):
-        distance = (0, 0)
-    else:
-        row = player-1
-        team = int(sender/22 <= 0.5)
-        start = team*11
-        opp_dist = dist_mat[row, start: start+11]
-        distance = (min(opp_dist), min(np.delete(opp_dist,
-                                                 np.argmin(opp_dist))))
-
-    return distance
-
 def distance_to_opp(sender, player, dist_mat):
     '''
     param : sender id; player id; distance matrix
@@ -105,15 +84,28 @@ def distance_to_opp(sender, player, dist_mat):
     team = int(sender/22 <= 0.5)
     start = team*11
     opp_dist = dist_mat[row, start: start+11]
-    if (sameteam(sender, player) == 0):
+    if(same_team_(sender, player) == 1):
         distance = (min(opp_dist), min(np.delete(opp_dist,
-                                             np.argmin(opp_dist))))
+                                                 np.argmin(opp_dist))))
     else:
-        np.delete(opp_dist,np.argmin(opp_dist))
+        opp_dist = np.delete(opp_dist, np.argmin(opp_dist))
         distance = (min(opp_dist), min(np.delete(opp_dist,
-                                             np.argmin(opp_dist))))
+                                                 np.argmin(opp_dist))))
     return distance
 
+def distance_to_opp_rec(player, dist_mat):
+    '''
+    param : sender id; player id; distance matrix
+    return : distances between player and the two closest opponents of player
+    '''
+    row = player-1
+    team = int(player/22 <= 0.5)
+    start = team*11
+    opp_dist = dist_mat[row, start: start+11]
+    distance = (min(opp_dist), min(np.delete(opp_dist,
+                                    np.argmin(opp_dist))))
+
+    return distance
 
 def number_of_opp(sender, player, dist_mat):
     '''
@@ -122,7 +114,7 @@ def number_of_opp(sender, player, dist_mat):
     receiver
     '''
     numb_opp = 0
-    radius = 1580  # Mean length of a pass
+    radius = 300  # Mean length of a pass
 
     row = player-1
     team = int(sender/22 <= 0.5)
@@ -135,7 +127,6 @@ def number_of_opp(sender, player, dist_mat):
             numb_opp = numb_opp + 1
 
     return numb_opp
-
 
 def heron(sender, player, distance, dist_mat):
     '''
@@ -175,7 +166,6 @@ def heron(sender, player, distance, dist_mat):
 
     return h
 
-
 def define_zone(x, y):
     zone = 0
     if y >= -1750 and y <= 1750:
@@ -192,12 +182,11 @@ def define_zone(x, y):
             zone = 5  # Couloir bas
     return zone
 
-
 def make_pair_of_players(X_, y_=None):
     n_ = X_.shape[0]
     pair_feature_col = ["sender", "x_sender", "y_sender",
                         "player_j", "x_j", "y_j", "same_team", "distance",
-                        "distance_opp_1", "distance_opp_2", "distance_line",
+                        "distance_opp_1", "distance_opp_2","distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
                         "nb_opp", "zone_send", "zone_rec", "x_ball_gain"]
 
     X_pairs = pd.DataFrame(data=np.zeros((n_*22, len(pair_feature_col))),
@@ -214,19 +203,21 @@ def make_pair_of_players(X_, y_=None):
         players = np.arange(1, 23)
         other_players = np.delete(players, sender-1)
         ss_numb_opp = number_of_opp(sender, sender, distance_matrix)
+        zone_sender = define_zone(p_i_["x_{:0.0f}".format(sender)],
+                                  p_i_["y_{:0.0f}".format(sender)])
         X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)],
                              p_i_["y_{:0.0f}".format(sender)], sender,
                              p_i_["x_{:0.0f}".format(sender)],
                              p_i_["y_{:0.0f}".format(sender)],
-                             same_team_(sender, sender), 0, 0, 0, 0,
-                             ss_numb_opp, 0, 0, 0]
-        zone_sender = define_zone(p_i_["x_{:0.0f}".format(sender)],
-                                  p_i_["y_{:0.0f}".format(sender)])
+                             same_team_(sender, sender), 0, distance_to_opp(sender, sender, distance_matrix)[0],
+                             distance_to_opp(sender, sender, distance_matrix)[1],distance_to_opp_rec(sender, distance_matrix)[0],distance_to_opp_rec(sender, distance_matrix)[1] ,distance_to_opp(sender, sender, distance_matrix)[0],
+                             ss_numb_opp, zone_sender, zone_sender, 0]
 
         idx += 1
         for player_j in other_players:
             distance = distance_matrix[sender-1, player_j-1]
             distance_opp = distance_to_opp(sender, player_j, distance_matrix)
+            distance_opp_rec = distance_to_opp_rec(player_j, distance_matrix)
             distance_line = heron(sender, player_j, distance, distance_matrix)
             numb_opp = number_of_opp(sender, player_j, distance_matrix)
             X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)],
@@ -236,6 +227,7 @@ def make_pair_of_players(X_, y_=None):
                                  p_i_["y_{:0.0f}".format(player_j)],
                                  same_team_(sender, player_j), distance,
                                  distance_opp[0], distance_opp[1],
+                                 distance_opp_rec[0], distance_opp_rec[1],
                                  distance_line, numb_opp, zone_sender,
                                  define_zone(p_i_["x_{:0.0f}"
                                                   .format(player_j)],
@@ -270,7 +262,7 @@ def compute_x_ball_gain(pass_):
                                                         .format(i+1)]
 
         if(same_team_(sender, i+1) == 0) :
-            x_gains["x_{:0.0f}".format(i+1)] = -10000
+            x_gains["x{:0.0f}".format(i+1)] = -10000
 
     return x_gains
 

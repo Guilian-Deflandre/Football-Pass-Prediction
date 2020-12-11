@@ -23,6 +23,9 @@ def output_reconstruction(y):
 
 if __name__ == '__main__':
     prefix = 'Data/'
+    features = ["same_team","distance", "distance_opp_1","distance_opp_2",
+                "distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
+                "nb_opp","zone_send", "zone_rec", "x_ball_gain"]
 
     # -------------------------- Data retrievement -------------------------- #
     # Load training data
@@ -31,25 +34,22 @@ if __name__ == '__main__':
 
     # --------------------------- Test set method --------------------------- #
     size = round(0.2*(X_LS_tot.shape[0]))
-    print('size = {}'.format(size))
-    X_LS_VS, X_TS, y_LS_VS, y_TS = train_test_split(X_LS_tot, y_LS_tot, test_size=size, random_state=1)
-    X_LS, X_VS, y_LS, y_VS = train_test_split(X_LS_VS, y_LS_VS, test_size=size, random_state=1)
-    print("| SHAPES |\nX_train : {}\nX_valid : {}\nX_test : {}".format(X_LS.shape[0], X_VS.shape[0], X_TS.shape[0]))
+    X_LS_VS, X_TS, y_LS_VS, y_TS = train_test_split(X_LS_tot, y_LS_tot,
+                                                    test_size=size,
+                                                    random_state=1)
+    X_LS, X_VS, y_LS, y_VS = train_test_split(X_LS_VS, y_LS_VS,
+                                              test_size=size, random_state=1)
 
     print('Learning set features derivation...')
     X_LS_pairs, y_LS_pairs = FeatureDerivation.make_pair_of_players(X_LS, y_LS)
-    X_LS_features = X_LS_pairs[["distance", "distance_opp_1", "distance_opp_2",
-                             "distance_line", "same_team", "nb_opp",
-                             "zone_send", "zone_rec", "x_ball_gain"]]
+    X_LS_features = X_LS_pairs[features]
 
     # Build models, train them on LS, and evaluate them on VS
     print('Validation set features derivation...')
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
-    X_VS_features = X_VS_pairs[["distance", "distance_opp_1", "distance_opp_2",
-                             "distance_line", "same_team", "nb_opp",
-                             "zone_send", "zone_rec", "x_ball_gain"]]
+    X_VS_features = X_VS_pairs[features]
 
-    k = [500, 750, 1000]
+    k = [100, 200, 300, 400, 500]
     scores = []
     for i in range(len(k)):
         print('\nTraining for max_iter = {}...'.format(k[i]))
@@ -68,6 +68,8 @@ if __name__ == '__main__':
 
     fig = plt.figure()
     plt.plot(k, scores)
+    plt.xlabel('max_iter')
+    plt.ylabel('Accuracy score')
     plt.show()
     fig.savefig('NN_test_set')
 
@@ -81,9 +83,7 @@ if __name__ == '__main__':
     # Test this model on the TS
     print('Test set features derivation...')
     X_TS_pairs, y_TS_pairs = FeatureDerivation.make_pair_of_players(X_TS, y_TS)
-    X_TS_features = X_TS_pairs[["distance", "distance_opp_1", "distance_opp_2",
-                             "distance_line", "same_team", "nb_opp",
-                             "zone_send", "zone_rec", "x_ball_gain"]]
+    X_TS_features = X_TS_pairs[features]
     y_hat = best_model.predict_proba(X_TS_features)[:,1]
     y_hat = output_reconstruction(y_hat)
     perf_estim = accuracy_score(y_TS, y_hat)
@@ -94,9 +94,7 @@ if __name__ == '__main__':
     print('X_LS_VS_TS is of shape {}'.format(X_LS_VS_TS_features.shape))
     y_LS_VS_TS_pairs = pd.concat([y_LS_VS_pairs, y_TS_pairs])
     print('\nTraining on LS+VS+TS...')
-    final_model = MLPClassifier(MLPClassifier(max_iter=k[best])
-                                .fit(X_LS_VS_TS_features,
-                                     np.ravel(y_LS_VS_TS_pairs))
+    final_model = MLPClassifier(MLPClassifier(max_iter=k[best])).fit(X_LS_VS_TS_features, np.ravel(y_LS_VS_TS_pairs))
 
     # ------------------------------ Prediction ----------------------------- #
     print('\nPredicting...')
@@ -107,9 +105,7 @@ if __name__ == '__main__':
     # Same transformation as LS
     X_TS_pairs, _ = FeatureDerivation.make_pair_of_players(X_TS)
 
-    X_TS_features = X_TS_pairs[["distance", "distance_opp_1", "distance_opp_2",
-                                "distance_line", "same_team", "nb_opp",
-                                "zone_send", "zone_rec", "x_ball_gain"]]
+    X_TS_features = X_TS_pairs[features]
 
     # Predict
     y_pred = model.predict_proba(X_TS_features)[:, 1]
