@@ -261,9 +261,6 @@ def compute_x_ball_gain(pass_):
             x_gains["x_{:0.0f}".format(i+1)] = -x_gains["x_{:0.0f}"
                                                         .format(i+1)]
 
-        if(same_team_(sender, i+1) == 0) :
-            x_gains["x{:0.0f}".format(i+1)] = -10000
-
     return x_gains
 
 
@@ -310,7 +307,7 @@ def write_submission(predictions=None, probas=None, estimated_score=0,
     if date:
         file_name = '{}_{}'.format(file_name, time.strftime('%d-%m-%Y_%Hh%M'))
 
-    file_name = '{}.txt'.format(file_name)
+    file_name = '{}.csv'.format(file_name)
 
     if predictions is None and probas is None:
         raise ValueError('Predictions and/or probas should be provided.')
@@ -336,13 +333,13 @@ def write_submission(predictions=None, probas=None, estimated_score=0,
     # Writing into the file
     with open(file_name, 'w') as handle:
         # Creating header
-        header = '"Id","Predicted",'
+        header = 'Id,Predicted,'
         for j in range(1, 23):
-            header = header + '"P_{:0.0f}",'.format(j)
+            header = header + 'P_{:0.0f},'.format(j)
         handle.write(header[:-1]+"\n")
 
         # Adding your estimated score
-        first_line = '"Estimation",{},'.format(estimated_score)
+        first_line = 'Estimation,{},'.format(estimated_score)
         for j in range(1, 23):
             first_line = first_line + '0,'
         handle.write(first_line[:-1]+"\n")

@@ -23,9 +23,9 @@ def output_reconstruction(y):
 
 if __name__ == '__main__':
     prefix = 'Data/'
-    features = ["same_team","distance", "distance_opp_1","distance_opp_2",
+    features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
                 "distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
-                "nb_opp","zone_send", "zone_rec", "x_ball_gain"]
+                "nb_opp", "x_ball_gain"]
 
     # -------------------------- Data retrievement -------------------------- #
     # Load training data
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
     X_VS_features = X_VS_pairs[features]
 
-    k = [100, 200, 300, 400, 500]
+    k = [200, 400, 600, 800, 1000]
     scores = []
     for i in range(len(k)):
         print('\nTraining for max_iter = {}...'.format(k[i]))
@@ -94,7 +94,8 @@ if __name__ == '__main__':
     print('X_LS_VS_TS is of shape {}'.format(X_LS_VS_TS_features.shape))
     y_LS_VS_TS_pairs = pd.concat([y_LS_VS_pairs, y_TS_pairs])
     print('\nTraining on LS+VS+TS...')
-    final_model = MLPClassifier(MLPClassifier(max_iter=k[best])).fit(X_LS_VS_TS_features, np.ravel(y_LS_VS_TS_pairs))
+    final_model = MLPClassifier(max_iter=k[best]).fit(
+                    X_LS_VS_TS_features, np.ravel(y_LS_VS_TS_pairs))
 
     # ------------------------------ Prediction ----------------------------- #
     print('\nPredicting...')
