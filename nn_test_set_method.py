@@ -25,7 +25,9 @@ if __name__ == '__main__':
     prefix = 'Data/'
     features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
                 "distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
-                "nb_opp", "x_ball_gain"]
+                "nb_opp", "zone_1_send", "zone_2_send", "zone_3_send", 
+                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec", 
+                "zone_3_rec", "zone_4_rec", "zone_5_rec", "x_ball_gain"]
 
     # -------------------------- Data retrievement -------------------------- #
     # Load training data
@@ -49,7 +51,7 @@ if __name__ == '__main__':
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
     X_VS_features = X_VS_pairs[features]
 
-    k = [200, 400, 600, 800, 1000]
+    k = [800]
     scores = []
     for i in range(len(k)):
         print('\nTraining for max_iter = {}...'.format(k[i]))

@@ -170,24 +170,28 @@ def define_zone(x, y):
     zone = 0
     if y >= -1750 and y <= 1750:
         if x >= -3200 and x <= 3200:
-            zone = 1  # Central zone
+            zone = [1, 0, 0, 0, 0]  # Central zone => 1
         if x >= -5250 and x < -3200:
-            zone = 2  # Zone but 1
+            zone = [0, 1, 0, 0, 0]  # Zone but 1 => 2
         else:
-            zone = 3  # Zone but 2
+            zone = [0, 0, 1, 0, 0]  # Zone but 2 => 3
     else:
         if y > 1750:
-            zone = 4  # Couloir haut
+            zone = [0, 0, 0, 1, 0]  # Couloir haut => 4
         else:
-            zone = 5  # Couloir bas
+            zone = [0, 0, 0, 0, 1]  # Couloir bas => 5
     return zone
 
 def make_pair_of_players(X_, y_=None):
     n_ = X_.shape[0]
     pair_feature_col = ["sender", "x_sender", "y_sender",
                         "player_j", "x_j", "y_j", "same_team", "distance",
-                        "distance_opp_1", "distance_opp_2","distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
-                        "nb_opp", "zone_send", "zone_rec", "x_ball_gain"]
+                        "distance_opp_1", "distance_opp_2","distance_opp_rec_1",
+                        "distance_opp_rec_2", "distance_line",
+                        "nb_opp", "zone_1_send", "zone_2_send",
+                        "zone_3_send", "zone_4_send", "zone_5_send", 
+                        "zone_1_rec", "zone_2_rec", "zone_3_rec", 
+                        "zone_4_rec", "zone_5_rec", "x_ball_gain"]
 
     X_pairs = pd.DataFrame(data=np.zeros((n_*22, len(pair_feature_col))),
                            columns=pair_feature_col)
@@ -206,12 +210,21 @@ def make_pair_of_players(X_, y_=None):
         zone_sender = define_zone(p_i_["x_{:0.0f}".format(sender)],
                                   p_i_["y_{:0.0f}".format(sender)])
         X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)],
-                             p_i_["y_{:0.0f}".format(sender)], sender,
+                             p_i_["y_{:0.0f}".format(sender)], 
+                             sender,
                              p_i_["x_{:0.0f}".format(sender)],
                              p_i_["y_{:0.0f}".format(sender)],
-                             same_team_(sender, sender), 0, distance_to_opp(sender, sender, distance_matrix)[0],
-                             distance_to_opp(sender, sender, distance_matrix)[1],distance_to_opp_rec(sender, distance_matrix)[0],distance_to_opp_rec(sender, distance_matrix)[1] ,distance_to_opp(sender, sender, distance_matrix)[0],
-                             ss_numb_opp, zone_sender, zone_sender, 0]
+                             same_team_(sender, sender), 
+                             0, 
+                             distance_to_opp(sender, sender, distance_matrix)[0],
+                             distance_to_opp(sender, sender, distance_matrix)[1],
+                             distance_to_opp_rec(sender, distance_matrix)[0],
+                             distance_to_opp_rec(sender, distance_matrix)[1],
+                             distance_to_opp(sender, sender, distance_matrix)[0],
+                             ss_numb_opp, zone_sender[0], zone_sender[1], 
+                             zone_sender[2], zone_sender[3], zone_sender[4], 
+                             zone_sender[0], zone_sender[1], zone_sender[2], 
+                             zone_sender[3], zone_sender[4], 0]
 
         idx += 1
         for player_j in other_players:
@@ -220,6 +233,8 @@ def make_pair_of_players(X_, y_=None):
             distance_opp_rec = distance_to_opp_rec(player_j, distance_matrix)
             distance_line = heron(sender, player_j, distance, distance_matrix)
             numb_opp = number_of_opp(sender, player_j, distance_matrix)
+            zone_receiver = define_zone(p_i_["x_{:0.0f}".format(player_j)],
+                                        p_i_["y_{:0.0f}".format(player_j)])
             X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)],
                                  p_i_["y_{:0.0f}".format(sender)],
                                  player_j,
@@ -228,11 +243,12 @@ def make_pair_of_players(X_, y_=None):
                                  same_team_(sender, player_j), distance,
                                  distance_opp[0], distance_opp[1],
                                  distance_opp_rec[0], distance_opp_rec[1],
-                                 distance_line, numb_opp, zone_sender,
-                                 define_zone(p_i_["x_{:0.0f}"
-                                                  .format(player_j)],
-                                             p_i_["y_{:0.0f}"
-                                                  .format(player_j)]),
+                                 distance_line, numb_opp, zone_sender[0], 
+                                 zone_sender[1], zone_sender[2], 
+                                 zone_sender[3], zone_sender[4], 
+                                 zone_receiver[0], zone_receiver[1],
+                                 zone_receiver[2], zone_receiver[3],
+                                 zone_receiver[4],
                                  x_ball_gain["x_{:0.0f}".format(player_j)]]
 
             if y_ is not None:
@@ -240,7 +256,6 @@ def make_pair_of_players(X_, y_=None):
             idx += 1
 
     return X_pairs, y_pairs
-
 
 def compute_x_ball_gain(pass_):
     sender = pass_["sender"]
