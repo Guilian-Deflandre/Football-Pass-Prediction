@@ -23,9 +23,11 @@ def output_reconstruction(y):
 
 if __name__ == '__main__':
     prefix = 'Data/'
-    features = ["same_team","distance", "distance_opp_1","distance_opp_2",
+    features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
                 "distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
-                "nb_opp","zone_send", "zone_rec", "x_ball_gain"]
+                "nb_opp", "zone_1_send", "zone_2_send", "zone_3_send", 
+                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec", 
+                "zone_3_rec", "zone_4_rec", "zone_5_rec", "x_ball_gain"]
 
     # -------------------------- Data retrievement -------------------------- #
     # Load training data

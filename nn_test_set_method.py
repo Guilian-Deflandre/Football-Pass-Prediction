@@ -25,9 +25,11 @@ if __name__ == '__main__':
     prefix = 'Data/'
     features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
                 "distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
-                "nb_opp", "zone_1_send", "zone_2_send", "zone_3_send", 
-                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec", 
-                "zone_3_rec", "zone_4_rec", "zone_5_rec", "x_ball_gain"]
+                "nb_opp", "zone_1_send", "zone_2_send", "zone_3_send",
+                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec",
+                "zone_3_rec", "zone_4_rec", "zone_5_rec", "x_ball_gain",
+                "dist_y_abs", "rec_to_cntr_dist", "snd_to_cntr_dist",
+                "smallest_angle", "is_in_attack"]
 
     # -------------------------- Data retrievement -------------------------- #
     # Load training data
@@ -51,12 +53,12 @@ if __name__ == '__main__':
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
     X_VS_features = X_VS_pairs[features]
 
-    k = [800]
+    k = [500]
     scores = []
     for i in range(len(k)):
         print('\nTraining for max_iter = {}...'.format(k[i]))
-        model = MLPClassifier(
-            max_iter=k[i]).fit(X_LS_features, np.ravel(y_LS_pairs))
+        model = MLPClassifier(max_iter=k[i]).fit(
+            X_LS_features, np.ravel(y_LS_pairs))
         y_hat = model.predict_proba(X_VS_features)[:, 1]
         y_hat = output_reconstruction(y_hat)
         scores.append(accuracy_score(y_VS, y_hat))
@@ -73,7 +75,7 @@ if __name__ == '__main__':
     plt.xlabel('max_iter')
     plt.ylabel('Accuracy score')
     plt.show()
-    fig.savefig('NN_test_set')
+    fig.savefig(prefix + 'NN_test_set')
 
     # Retrain this model on LS+VS
     X_LS_VS_features = pd.concat([X_LS_features, X_VS_features])
