@@ -63,7 +63,7 @@ if __name__ == '__main__':
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
     X_VS_features = X_VS_pairs[features]
 
-    k = [200]
+    k = [250, 500, 750, 1000]
     #k = [(100,) ,(100, 100,), (100, 50,)] # layers spec
     scores = []
     for i in range(len(k)):
