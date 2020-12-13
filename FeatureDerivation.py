@@ -9,8 +9,6 @@ import numpy as np
 
 import Vectors as vec
 
-import math
-
 
 @contextmanager
 def measure_time(label):
@@ -111,6 +109,22 @@ def distance_to_opp(sender, player, dist_mat):
     distance = (d1, d2)
     return distance
 
+"""
+Feature used before error detection (see report)
+def distance_to_opp(sender, player, dist_mat):
+    row = player-1
+    team = int(sender/22 <= 0.5)
+    start = team*11
+    opp_dist = dist_mat[row, start: start+11]
+    if(same_team_(sender, player)==1):
+        distance = (min(opp_dist), min(np.delete(opp_dist,
+                                    np.argmin(opp_dist))))
+    else:
+        opp_dist = np.delete(opp_dist, np.argmin(opp_dist))
+        distance = (min(opp_dist), min(np.delete(opp_dist,
+                                    np.argmin(opp_dist))))
+    return distance
+"""
 
 def sender_distance_to_closest_teammate(sender, dist_mat):
     """
@@ -167,8 +181,8 @@ def distance_to_opp_rec(player, dist_mat):
 
 def receiver_closest(sender, player, distance_matrix):
     """
-    Compute the distance of the two closest sender's opponents to the receiver
-    whatever the receiver's team.
+    Compute the distance btween the potential recever and the two closest
+    teammate to the sender.
 
     PARAMETERS
     sender: int, 1 <= sender <= 22
@@ -180,7 +194,7 @@ def receiver_closest(sender, player, distance_matrix):
 
     RETURN
     distance: pair, (float, float)
-        The 2 minimal distances between the receiver and the sender's opponent.
+        The 2 minimal distances between the receiver and the sender's teammate.
     """
     row = player-1
     team = int(sender/22 >= 0.5)
@@ -212,7 +226,7 @@ def number_of_opp(sender, player, dist_mat):
         The number of opponent around the sender in a perimeter of 15m.
     """
     numb_opp = 0
-    radius = 300  # Mean length of a pass
+    radius = 1580  # Mean length of a pass
 
     row = player-1
     team = int(sender/22 <= 0.5)
