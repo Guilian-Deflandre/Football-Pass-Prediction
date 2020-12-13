@@ -86,7 +86,8 @@ def build_distance_matrix(pass_):
 
 def distance_to_opp(sender, player, dist_mat):
     """
-    Compute the distance of the two closest opponents of the sender.
+    Compute the distance between player and the two closest opponent of the
+    sender
 
     PARAMETERS
     sender: int, 1 <= sender <= 22
@@ -98,7 +99,7 @@ def distance_to_opp(sender, player, dist_mat):
 
     RETURN
     distance: pair, (float, float)
-        The 2 minimal distance between the sender and an opponent.
+        The 2 minimal distance between the receiver and sender's opponent.
     """
     row = sender-1
     team = int(sender/22 <= 0.5)
@@ -159,14 +160,15 @@ def distance_to_opp_rec(player, dist_mat):
     start = team*11
     opp_dist = dist_mat[row, start: start+11]
     distance = (min(opp_dist), min(np.delete(opp_dist,
-                                    np.argmin(opp_dist))))
+                                             np.argmin(opp_dist))))
 
     return distance
 
 
 def receiver_closest(sender, player, distance_matrix):
     """
-    Compute the distance of the two closest opponents of the receiver.
+    Compute the distance of the two closest sender's opponents to the receiver
+    whatever the receiver's team.
 
     PARAMETERS
     sender: int, 1 <= sender <= 22
@@ -178,7 +180,7 @@ def receiver_closest(sender, player, distance_matrix):
 
     RETURN
     distance: pair, (float, float)
-        The 2 minimal distance between the receiver and an opponent.
+        The 2 minimal distances between the receiver and the sender's opponent.
     """
     row = player-1
     team = int(sender/22 >= 0.5)
@@ -287,7 +289,6 @@ def is_in_attack(pass_):
                                         x_positions["x_{:0.0f}".format(i+1)])
 
     sum_position_team_sender = sum_position_team_sender/11
-
 
     if(same_team_(sender, leftmost_player) == 1):
         if(sum_position_team_sender <= 0):
@@ -462,7 +463,7 @@ def make_pair_of_players(X_, y_=None):
                         "distance_opp_1", "distance_opp_2",
                         "distance_opp_rec_1", "distance_opp_rec_2",
                         "receiver_closest_t1", "receiver_closest_t2",
-                        "nb_opp", "x_ball_gain","zone_1_send", "zone_2_send",
+                        "nb_opp", "x_ball_gain", "zone_1_send", "zone_2_send",
                         "zone_3_send", "zone_4_send", "zone_5_send",
                         "zone_1_rec", "zone_2_rec", "zone_3_rec",
                         "zone_4_rec", "zone_5_rec", "distance_line",
@@ -480,13 +481,12 @@ def make_pair_of_players(X_, y_=None):
         x_ball_gain = compute_x_ball_gain(p_i_)
         sender = X_.iloc[i].sender
         players = np.arange(1, 23)
-        #other_players = np.delete(players, sender-1)
         zone_sender = define_zone(p_i_["x_{:0.0f}".format(sender)],
                                   p_i_["y_{:0.0f}".format(sender)])
         attack = is_in_attack(p_i_)
-        snd_to_cntr_dist = np.sqrt((p_i_["x_{:0.0f}".format(sender)])**2 +
-                           (p_i_["y_{:0.0f}".format(sender)])**2)
-
+        snd_to_cntr_dist = np.sqrt(
+            (p_i_["x_{:0.0f}".format(sender)])**2 +
+            (p_i_["y_{:0.0f}".format(sender)])**2)
 
         for player_j in players:
             distance = distance_matrix[sender-1, player_j-1]
@@ -497,12 +497,11 @@ def make_pair_of_players(X_, y_=None):
             zone_receiver = define_zone(p_i_["x_{:0.0f}".format(player_j)],
                                         p_i_["y_{:0.0f}".format(player_j)])
             distance_line = heron(sender, player_j, p_i_, distance_matrix)
-            dist_y_abs =  abs(p_i_["y_{:0.0f}".format(sender)] -
-                              p_i_["y_{:0.0f}".format(player_j)])
-            rec_to_cntr_dist = np.sqrt((p_i_["x_{:0.0f}".format(player_j)])**2
-                               + (p_i_["y_{:0.0f}".format(player_j)])**2)
-
-
+            dist_y_abs = abs(p_i_["y_{:0.0f}".format(sender)] -
+                             p_i_["y_{:0.0f}".format(player_j)])
+            rec_to_cntr_dist = np.sqrt(
+                (p_i_["x_{:0.0f}".format(player_j)])**2 +
+                (p_i_["y_{:0.0f}".format(player_j)])**2)
 
             X_pairs.iloc[idx] = [sender,  p_i_["x_{:0.0f}".format(sender)],
                                  p_i_["y_{:0.0f}".format(sender)],
@@ -513,11 +512,13 @@ def make_pair_of_players(X_, y_=None):
                                  distance_opp[0], distance_opp[1],
                                  distance_opp_rec[0], distance_opp_rec[1],
                                  receiver_clos[0], receiver_clos[1], numb_opp,
-                                 x_ball_gain["x_{:0.0f}".format(player_j)],zone_sender[0], zone_sender[1],
-                                 zone_sender[2], zone_sender[3], zone_sender[4],
-                                 zone_receiver[0], zone_receiver[1],
-                                 zone_receiver[2], zone_receiver[3],
-                                 zone_receiver[4], distance_line, dist_y_abs, attack,
+                                 x_ball_gain["x_{:0.0f}".format(player_j)],
+                                 zone_sender[0], zone_sender[1],
+                                 zone_sender[2], zone_sender[3],
+                                 zone_sender[4], zone_receiver[0],
+                                 zone_receiver[1], zone_receiver[2],
+                                 zone_receiver[3], zone_receiver[4],
+                                 distance_line, dist_y_abs, attack,
                                  snd_to_cntr_dist, rec_to_cntr_dist]
 
             if y_ is not None:

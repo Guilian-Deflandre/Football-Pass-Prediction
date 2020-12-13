@@ -27,13 +27,13 @@ if __name__ == '__main__':
     prefix = 'Data/'
 
     # New features
-    features = ["same_team","distance", "distance_opp_1", "distance_opp_2",
+    features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
                 "distance_opp_rec_1", "distance_opp_rec_2",
                 "receiver_closest_t1", "receiver_closest_t2", "nb_opp",
                 "x_ball_gain", "zone_1_send", "zone_2_send", "zone_3_send",
                 "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec",
                 "zone_3_rec", "zone_4_rec", "zone_5_rec", "distance_line",
-                "dist_y_abs","is_in_attack", "sc_dist", "rc_dist"]
+                "dist_y_abs", "is_in_attack", "sc_dist", "rc_dist"]
 
     # Old features
     ''' Uncomment this to generate first report plots
@@ -44,7 +44,8 @@ if __name__ == '__main__':
     # -------------------------- Data retrievement -------------------------- #
     # Load training data
     X_LS_tot = FeatureDerivation.load_from_csv(prefix+'input_training_set.csv')
-    y_LS_tot = FeatureDerivation.load_from_csv(prefix+'output_training_set.csv')
+    y_LS_tot = FeatureDerivation.load_from_csv(
+        prefix+'output_training_set.csv')
 
     # --------------------------- Test set method --------------------------- #
     size = round(0.2*(X_LS_tot.shape[0]))
@@ -101,7 +102,7 @@ if __name__ == '__main__':
     print('Test set features derivation...')
     X_TS_pairs, y_TS_pairs = FeatureDerivation.make_pair_of_players(X_TS, y_TS)
     X_TS_features = X_TS_pairs[features]
-    y_hat = best_model.predict_proba(X_TS_features)[:,1]
+    y_hat = best_model.predict_proba(X_TS_features)[:, 1]
     y_hat = output_reconstruction(y_hat)
     perf_estim = accuracy_score(y_TS, y_hat)
     print('\nPerformance estimate: {}'.format(perf_estim))
