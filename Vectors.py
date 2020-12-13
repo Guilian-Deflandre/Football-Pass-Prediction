@@ -1,6 +1,18 @@
 import math
 
 def dot(v,w):
+    """
+    Compute a matrix containing th distances between each players.
+
+    PARAMETERS
+    pass_: array[1, 47]
+        The information of a pass (x and y coordinate of each players, id of
+        the sender, time in ms since the half start and the if of the pass).
+
+    RETURN
+    distance_matrix: array[22, 22]
+        The matrix of distances between each players.
+    """
     x,y = v
     X,Y = w
     return x*X + y*Y

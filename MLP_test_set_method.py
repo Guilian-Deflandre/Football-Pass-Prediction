@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 import FeatureDerivation
+
 
 def output_reconstruction(y):
     """Reconstruct output vector as in original data"""
@@ -20,6 +21,7 @@ def output_reconstruction(y):
     output = output.astype(int)
 
     return output
+
 
 if __name__ == '__main__':
     prefix = 'Data/'
@@ -61,13 +63,13 @@ if __name__ == '__main__':
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
     X_VS_features = X_VS_pairs[features]
 
-    k = np.arange(1, 70)
+    k = [200]
+    #k = [(100,) ,(100, 100,), (100, 50,)] # layers spec
     scores = []
-    for i in range(k.size):
-        print('\nTraining for n_neighbors = {}...'.format(k[i]))
-        model = KNeighborsClassifier(
-            n_neighbors=k[i], weights='distance').fit(X_LS_features,
-                                                      np.ravel(y_LS_pairs))
+    for i in range(len(k)):
+        print('\nTraining for  max_iter = {}...'.format(k[i]))
+        model = MLPClassifier(
+             max_iter=k[i]).fit(X_LS_features, np.ravel(y_LS_pairs))
         y_hat = model.predict_proba(X_VS_features)[:, 1]
         y_hat = output_reconstruction(y_hat)
         scores.append(accuracy_score(y_VS, y_hat))
@@ -76,15 +78,15 @@ if __name__ == '__main__':
     scores = np.asarray(scores)
     print('Scores: {}'.format(scores))
     best = np.argmax(scores)
-    best_model = KNeighborsClassifier(n_neighbors=k[best], weights='distance')
-    print('\nBest model: n_neighbors = {}'.format(k[best]))
+    best_model = MLPClassifier(max_iter=k[best])
+    print('\nBest model: max_iter = {}'.format(k[best]))
 
     fig = plt.figure()
     plt.plot(k, scores)
-    plt.xlabel('Number of neighbors')
+    plt.xlabel('max_iter')
     plt.ylabel('Accuracy score')
     plt.show()
-    fig.savefig('KNN_test_set.pdf')
+    fig.savefig('MLP_test_set.pdf')
 
     # Retrain this model on LS+VS
     X_LS_VS_features = pd.concat([X_LS_features, X_VS_features])
@@ -95,7 +97,7 @@ if __name__ == '__main__':
 
     # Test this model on the TS
     print('Test set features derivation...')
-    X_TS_pairs, y_TS_pairs = FeatureDerivation_old.make_pair_of_players(X_TS, y_TS)
+    X_TS_pairs, y_TS_pairs = FeatureDerivation.make_pair_of_players(X_TS, y_TS)
     X_TS_features = X_TS_pairs[features]
     y_hat = best_model.predict_proba(X_TS_features)[:,1]
     y_hat = output_reconstruction(y_hat)
@@ -107,9 +109,8 @@ if __name__ == '__main__':
     print('X_LS_VS_TS is of shape {}'.format(X_LS_VS_TS_features.shape))
     y_LS_VS_TS_pairs = pd.concat([y_LS_VS_pairs, y_TS_pairs])
     print('\nTraining on LS+VS+TS...')
-    final_model = KNeighborsClassifier(
-        n_neighbors=k[best], weights='distance').fit(X_LS_VS_TS_features,
-        np.ravel(y_LS_VS_TS_pairs))
+    final_model = MLPClassifier(max_iters=k[best]).fit(
+                    X_LS_VS_TS_features, np.ravel(y_LS_VS_TS_pairs))
 
     # ------------------------------ Prediction ----------------------------- #
     print('\nPredicting...')
@@ -121,9 +122,9 @@ if __name__ == '__main__':
     X_TS_pairs, _ = FeatureDerivation.make_pair_of_players(X_TS)
 
     X_TS_features = X_TS_pairs[features]
-    print(X_TS_features)
+
     # Predict
-    y_pred = final_model.predict_proba(X_TS_features)[:, 1]
+    y_pred = model.predict_proba(X_TS_features)[:, 1]
 
     # Deriving probas
     probas = y_pred.reshape(X_TS.shape[0], 22)
@@ -135,5 +136,6 @@ if __name__ == '__main__':
     fname = FeatureDerivation.write_submission(probas=probas,
                                                estimated_score=predicted_score,
                                                file_name=prefix +
-                                               "KNN_test_set_method")
-    print('\nSubmission file "{}" successfully written'.format(fname))"""
+                                               "MLP_test_set_method")
+
+    print('\nSubmission file "{}" successfully written'.format(fname))

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 import FeatureDerivation
 
+
 def output_reconstruction(y):
     """Reconstruct output vector as in original data"""
     size = len(y)
@@ -21,13 +22,24 @@ def output_reconstruction(y):
 
     return output
 
+
 if __name__ == '__main__':
     prefix = 'Data/'
+
+    # New features
+    features = ["same_team","distance", "distance_opp_1", "distance_opp_2",
+                "distance_opp_rec_1", "distance_opp_rec_2",
+                "receiver_closest_t1", "receiver_closest_t2", "nb_opp",
+                "x_ball_gain", "zone_1_send", "zone_2_send", "zone_3_send",
+                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec",
+                "zone_3_rec", "zone_4_rec", "zone_5_rec", "distance_line",
+                "dist_y_abs","is_in_attack", "sc_dist", "rc_dist"]
+
+    # Old features
+    ''' Uncomment this to generate first report plots
     features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
-                "distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
-                "nb_opp", "zone_1_send", "zone_2_send", "zone_3_send", 
-                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec", 
-                "zone_3_rec", "zone_4_rec", "zone_5_rec", "x_ball_gain"]
+                "distance_line", "nb_opp", "zone_send", "zone_rec"]
+    '''
 
     # -------------------------- Data retrievement -------------------------- #
     # Load training data
@@ -51,7 +63,7 @@ if __name__ == '__main__':
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
     X_VS_features = X_VS_pairs[features]
 
-    #nb_trees = np.arange(50, 150, 5)
+    # nb_trees = np.arange(50, 150, 5)
     depth = np.arange(1, 50)
     scores = []
     for i in range(depth.size):
@@ -76,7 +88,8 @@ if __name__ == '__main__':
     plt.xlabel('max_depth')
     plt.ylabel('Accuracy score')
     plt.show()
-    fig.savefig('RF_test_set_distance_opp_rec')
+    fig.savefig('RF_test_set.pdf')
+
     # Retrain this model on LS+VS
     X_LS_VS_features = pd.concat([X_LS_features, X_VS_features])
     print('\nX_LS_VS is of shape {}'.format(X_LS_VS_features.shape))
@@ -127,8 +140,6 @@ if __name__ == '__main__':
     fname = FeatureDerivation.write_submission(probas=probas,
                                                estimated_score=predicted_score,
                                                file_name=prefix +
-                                               "random_forest" +
-                                               "_test_set_method" +
-                                               "_distance_to_opp_rec")
+                                               "random_forest_test_set_method")
 
     print('\nSubmission file "{}" successfully written'.format(fname))

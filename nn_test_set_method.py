@@ -23,14 +23,22 @@ def output_reconstruction(y):
 
 if __name__ == '__main__':
     prefix = 'Data/'
-    features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
-                "distance_opp_rec_1", "distance_opp_rec_2", "distance_line",
-                "nb_opp", "zone_1_send", "zone_2_send", "zone_3_send",
-                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec",
-                "zone_3_rec", "zone_4_rec", "zone_5_rec", "x_ball_gain",
-                "dist_y_abs", "rec_to_cntr_dist", "snd_to_cntr_dist",
-                "smallest_angle", "is_in_attack"]
 
+    # New features
+    features = ["same_team","distance", "distance_opp_1", "distance_opp_2",
+                "distance_opp_rec_1", "distance_opp_rec_2",
+                "receiver_closest_t1", "receiver_closest_t2", "nb_opp",
+                "x_ball_gain", "zone_1_send", "zone_2_send", "zone_3_send",
+                "zone_4_send", "zone_5_send", "zone_1_rec", "zone_2_rec",
+                "zone_3_rec", "zone_4_rec", "zone_5_rec", "distance_line",
+                "dist_y_abs","is_in_attack", "sc_dist", "rc_dist"]
+
+    # Old features
+    ''' Uncomment this to generate first report plots
+    features = ["same_team", "distance", "distance_opp_1", "distance_opp_2",
+                "distance_line", "nb_opp", "zone_send", "zone_rec"]
+    '''
+    
     # -------------------------- Data retrievement -------------------------- #
     # Load training data
     X_LS_tot = FeatureDerivation.load_from_csv(prefix+'input_training_set.csv')
@@ -53,7 +61,7 @@ if __name__ == '__main__':
     X_VS_pairs, y_VS_pairs = FeatureDerivation.make_pair_of_players(X_VS, y_VS)
     X_VS_features = X_VS_pairs[features]
 
-    k = [500]
+    k = [250, 500, 750, 1000]
     scores = []
     for i in range(len(k)):
         print('\nTraining for max_iter = {}...'.format(k[i]))
@@ -125,8 +133,6 @@ if __name__ == '__main__':
     fname = FeatureDerivation.write_submission(probas=probas,
                                                estimated_score=predicted_score,
                                                file_name=prefix +
-                                               "nn" +
-                                               "_test_set_method" +
-                                               "_degree5")
+                                               "nn_test_set_method")
 
     print('\nSubmission file "{}" successfully written'.format(fname))
