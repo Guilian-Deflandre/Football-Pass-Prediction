@@ -109,22 +109,6 @@ def distance_to_opp(sender, player, dist_mat):
     distance = (d1, d2)
     return distance
 
-"""
-Feature used before error detection (see report)
-def distance_to_opp(sender, player, dist_mat):
-    row = player-1
-    team = int(sender/22 <= 0.5)
-    start = team*11
-    opp_dist = dist_mat[row, start: start+11]
-    if(same_team_(sender, player)==1):
-        distance = (min(opp_dist), min(np.delete(opp_dist,
-                                    np.argmin(opp_dist))))
-    else:
-        opp_dist = np.delete(opp_dist, np.argmin(opp_dist))
-        distance = (min(opp_dist), min(np.delete(opp_dist,
-                                    np.argmin(opp_dist))))
-    return distance
-"""
 
 def sender_distance_to_closest_teammate(sender, dist_mat):
     """
