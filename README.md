@@ -39,6 +39,29 @@ The pitch is 105 meters long (x-axis) and 68 meters wide (y-axis), and coordinat
 
 `input_test_set.csv` : see `input_train_set.csv`.
 
+
+# Computed features
+## Quantitative Features
+It has been decided to enrich our data set with some numerical features, mainly being distancesover the football field. Let’s review which features have been selected to solve the prediction problem.
+* Distance between the sender and the receiver: This feature was already implement by the `toy_example.py` provided file and has been kept. It simply consists of the Euclidean distance between the ball sender and the potential receiver (drawnamong all players on the field including the sender).
+* Distances between the sender and his two closest team mates: these features are represented correspond to the distance between the sender of the pass and his two closest teammates.
+* Distances between the receiver and his two closest opponents: These features has also been added and are the Euclidean distances between the receiver of the ball during the pass and his two closest opponents around him.
+* Distances between the sender and his two closest opponents: These features has also been added and are the Euclidean distances between the sender of the ballduring the pass and his two closest opponents around him.
+* Distance between the pass line and its closest sender’s opponent: An important feature for the team members was the smallest distance between a member of the sender’s opposed team and the pass line. Indeed, if some opponent are between the sender and the receiver, it seems logical that the pass is more risky and therefore that the sender will tend to choose another receiver.
+* Distance between the sender/receiver and the field center: These features correspond to the Euclidean distances between the sender and the receiver of the ball during the potential pass and the center of the football field located in (0,0).
+* Gain on the abscissa of the ball: This feature represents the horizontal movement of the ball towards the goal of the team opposed to the one of the sender. To compute this attribute, the side of the field occupied by each team has to be known. To determine this, the algorithm begins by determining the leftmost player on the field, considering that it is the goalkeeper of one of the 2 teams. If this player is on the same team than the ball sender, the goal in which he will have to score is on the right of the field, otherwise it is on the left. Note that here, an abstraction is made: *a player will never be located behind the goalkeeper of the team on the left side of the field*. It has been assumed that these situations are rare in football and thus that this is a right way to guess teams’ sides.
+* Ordinate displacement of the ball: This new data has been added to the model by simply computing the absolute value of the difference of ordinates coordinates between the sender and the potential receiver of a pass.
+## Qualitative Features
+* Predicate indicating if the sender is on the same team as the receiver of not: This feature was already implement by the `toy_example.py` provided file and has been kept. It simply consists of a boolean value being `1` (i.e. `True`) if the potential receiver of a pass is a team member of the sender, and `0` (i.e. `False`) otherwise.
+* Predicate indicating if the sender’s team is performing an attack or not: In a football game, the pass performed can depend of whether the team possessing the ball performs an attack or not. It thus has been decided to implement a function able to determine if thesender is in an offensive or defensive phase of game.  To do this, first the sender’s team field side is determined using the same method as described above. After that, the mean value of the `x` location of each player on the sender’s team is computed. Using these values, we can determine where most of the players in a team are located. If they are mostly in their camp, the action is considered as a defensive one, if they are not it’s an offensive one.
+* Number of sender’s opponents around the receiver: This characteristic simply gives the number of opponents in a radius of 15,8 meters from the ball receiver. This distance has not been chosen by chance. Indeed it represents the mean length of a pass for the whole data set.
+* Location zone of the sender and the receiver on the field: it has been decided to split the field into several zones. The following zones definition was decided
+    -Zone 1 (center): `x &isin; [−3200cm; 3200cm]`, `y &isin; [−1750cm; 1750cm]`;
+    -Zone 2 (left goal): `x &isin; [−5250cm;−3200cm]`, `y &isin; [−1750cm; 1750cm]`;
+    -Zone 3 (right goal): `x &isin; [3200cm; 5250cm]`, `y &isin; [−1750cm; 1750cm]`;
+    -Zone 4 (high flank): `x &isin; [−5250cm; 5250cm]`, `y &isin; [1750cm; 3400cm]`;
+    -Zone 5 (low flank): `x &isin; [−5250cm; 5250cm]`, `y &isin; [−3400cm;−1750cm]`.
+
 ## Other files provided
 `toy_example.py` : a "naive" script that helps you start and mainly consists in:
 
