@@ -41,8 +41,9 @@ The pitch is 105 meters long (x-axis) and 68 meters wide (y-axis), and coordinat
 
 
 # Computed features
+It has been decided to enrich our data set with some numerical features, mainly being distancesover the football field. Let’s review which features have been selected to solve the prediction problem. These features are computed by `FeatureDerivation`.
+
 ## Quantitative Features
-It has been decided to enrich our data set with some numerical features, mainly being distancesover the football field. Let’s review which features have been selected to solve the prediction problem.
 * Distance between the sender and the receiver: This feature was already implement by the `toy_example.py` provided file and has been kept. It simply consists of the Euclidean distance between the ball sender and the potential receiver (drawnamong all players on the field including the sender).
 * Distances between the sender and his two closest team mates: these features are represented correspond to the distance between the sender of the pass and his two closest teammates.
 * Distances between the receiver and his two closest opponents: These features has also been added and are the Euclidean distances between the receiver of the ball during the pass and his two closest opponents around him.
@@ -62,24 +63,26 @@ It has been decided to enrich our data set with some numerical features, mainly 
     - Zone 4 (high flank): `x` &isin; `[−5250cm; 5250cm]`, `y` &isin; `[1750cm; 3400cm]`;
     - Zone 5 (low flank): `x` &isin; `[−5250cm; 5250cm]`, `y` &isin; `[−3400cm;−1750cm]`.
 
-## Other files provided
-`toy_example.py` : a "naive" script that helps you start and mainly consists in:
+# Test Method
+To compare different algorithms and their hyper-parameters, we performed the so-called test set method, which divides the learning data set into three parts, namely the learning set *LS*, the validation set *VS* and the test set *TS*. In the scope of the considered problem, this method consists of the following steps
+1. We first randomly split the original 8682 passes data set into a 5210 passes *LS* and 1736 passes *VS* and *TS*, corresponding to 60 and 20 % of the whole data set respectively.
+2. Considering a certain combination of features, we then train the set of candidate models on *LS*.
+3. We evaluate each of these on *VS* by predicting the probability for each pair of players of *VS* to correspond to a pass, by deriving from those probabilities the predicted receiver’s Id foreach pass, and by comparing these results with the true output values corresponding to *VS*. Performing this evaluation allows us to select the best model based on its performance on *VS*.
+4. We then train the selected model on *LS+VS*, and evaluate its performance on *TS* using the Scikit-Learn metric `accuracy_score`, which gives a performance evaluate of the considered model.
+5. We finally train the selected model on *LS+VS+TS* to reach the best accuracy.
 
-* Loading the training set (both input and output files);
-* Deriving features for each pair of (sender, potential receiver) (This step is only one way of addressing the problem. We strongly recommend to also consider other approaches that the one provided here);
-* Making random/naive predictions (see below for more details);
-* Creating a submission file following the guidelines provided in the evaluation section.
+# Results
+The model providing the best accuracy was a Random Forest for a `depth = 15`. The test set method has been achieved in order to predict the performance of the model, the predicted accuracy was `0.3698`.  Actually, this prediction was very accurate since the evaluation of the model on our test set gave us an accuracy of `0.3705`.
 
-In particular, please note that:
-* It creates a new sample set where each sample is a pair of players: the sender and player `j` with `j=1,..,22` (including the sender).
-* It computes two features: the distance between the two players and if they belong to the same team.
-* The `write_submission` function can make a submission with only the predicted player `ID` (`predictions` of size `(n_test_samples, )`) and/or predicted probabilities (`probas` of size `(n_test_samples,22)`). If only the predictions are provided, then the probabilities are derived (i.e., `1.0` for the predicted player in predictions and `0.0` for all others). If only the probabilities are given, then the predictions are derived (i.e., the predicted player is the one with the largest probability). Note that if several players have the same probability, the one with the smaller Id is selected.
-* `predicted_score` is hard-coded. Do not forget to modify this value.
-The `toy_example` script generates two submission files: one based on (randomly) predicted player ids, and one based on player probabilities predicted by a decision tree.
+# Usage
+The implementation was created on Python 3.8.5 using Sklearn libraries, make sure they are available on your machine before running the code. The models can be generated using
+```
+python [model]_test_set_method.py
+```
+where `[model]` is either `random_forest` for a random forest model, `knn` for a k-nearest neighbors model, `adaboost` for an AdaBoost model or `MLP` for a multilayer perceptron model. Note that all the model are evaluate with the test set method for differents hyper parameters values and generate the features by calling `FeatureDerivation.py`.
 
 # Organization
 The competition follows the same guidelines as the previous projects, ***i.e.***, a written report and codes must be submitted before the deadline on the Montefiore Submission Platform. The competition will end a couple of days before the deadline in order to let you add your latest results in the report. You can find more information here.
-
 
 # Acknowledgment
 This challenge is inspired from the Football Pass Prediction Challenge of the 5th Workshop on Machine Learning and Data Mining for Sports Analytics.
