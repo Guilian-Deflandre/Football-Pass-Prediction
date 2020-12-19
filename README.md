@@ -56,11 +56,11 @@ It has been decided to enrich our data set with some numerical features, mainly 
 * Predicate indicating if the sender’s team is performing an attack or not: In a football game, the pass performed can depend of whether the team possessing the ball performs an attack or not. It thus has been decided to implement a function able to determine if thesender is in an offensive or defensive phase of game.  To do this, first the sender’s team field side is determined using the same method as described above. After that, the mean value of the `x` location of each player on the sender’s team is computed. Using these values, we can determine where most of the players in a team are located. If they are mostly in their camp, the action is considered as a defensive one, if they are not it’s an offensive one.
 * Number of sender’s opponents around the receiver: This characteristic simply gives the number of opponents in a radius of 15,8 meters from the ball receiver. This distance has not been chosen by chance. Indeed it represents the mean length of a pass for the whole data set.
 * Location zone of the sender and the receiver on the field: it has been decided to split the field into several zones. The following zones definition was decided
-    -Zone 1 (center): `x &isin; [−3200cm; 3200cm]`, `y &isin; [−1750cm; 1750cm]`;
-    -Zone 2 (left goal): `x &isin; [−5250cm;−3200cm]`, `y &isin; [−1750cm; 1750cm]`;
-    -Zone 3 (right goal): `x &isin; [3200cm; 5250cm]`, `y &isin; [−1750cm; 1750cm]`;
-    -Zone 4 (high flank): `x &isin; [−5250cm; 5250cm]`, `y &isin; [1750cm; 3400cm]`;
-    -Zone 5 (low flank): `x &isin; [−5250cm; 5250cm]`, `y &isin; [−3400cm;−1750cm]`.
+    - Zone 1 (center): `x` &isin; `[−3200cm; 3200cm]`, `y` &isin; `[−1750cm; 1750cm]`;
+    - Zone 2 (left goal): `x` &isin; `[−5250cm;−3200cm]`, `y` &isin; `[−1750cm; 1750cm]`;
+    - Zone 3 (right goal): `x` &isin; `[3200cm; 5250cm]`, `y` &isin; `[−1750cm; 1750cm]`;
+    - Zone 4 (high flank): `x` &isin; `[−5250cm; 5250cm]`, `y` &isin; `[1750cm; 3400cm]`;
+    - Zone 5 (low flank): `x` &isin; `[−5250cm; 5250cm]`, `y` &isin; `[−3400cm;−1750cm]`.
 
 ## Other files provided
 `toy_example.py` : a "naive" script that helps you start and mainly consists in:
